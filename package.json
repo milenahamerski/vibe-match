@@ -1,0 +1,28 @@
+{
+  "name": "vibe-match",
+  "version": "1.0.0",
+  "description": "VibeMatch é uma aplicação web que recomenda filmes, séries e livros com base no humor do usuário.   A plataforma conecta emoções a conteúdos ideais para cada momento, proporcionando uma experiência personalizada.   Usuários podem avaliar, favoritar e organizar conteúdos de forma simples e intuitiva.",
+  "workspaces": [
+    "apps/*"
+  ],
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev:api": "npm run start:dev -w api",
+    "dev:web": "npm run dev -w web",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/milenahamerski/vibe-match.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/milenahamerski/vibe-match/issues"
+  },
+  "homepage": "https://github.com/milenahamerski/vibe-match#readme"
+}
