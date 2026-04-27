@@ -1,5 +1,5 @@
 # Dependency directories
-node_modules/
+/node_modules/
 jspm_packages/
 
 # Logs
@@ -38,13 +38,9 @@ out/
 .env.production.local
 *.env*
 
-# NestJS specific
-/dist
-/node_modules
-
-# Vite specific
-/apps/web/dist
-/apps/web/node_modules
+# NestJS and Vite specific
+**/dist/
+**/node_modules/
 
 # General monorepo
 /apps/*/node_modules
