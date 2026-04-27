@@ -6,6 +6,12 @@ Usuários podem avaliar, favoritar e organizar conteúdos de forma simples e int
 
 ---
 
+## 👥 Autores
+
+- **Milena Hamerski** - *Desenvolvedora Principal*
+
+---
+
 ## 🚀 Stack Tecnológica
 
 ### Backend

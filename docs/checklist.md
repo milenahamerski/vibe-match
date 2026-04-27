@@ -7,10 +7,10 @@
 
 ## 🎯 RA1 - Arquitetura, Engenharia de Requisitos com IA e Gestão Ágil
 
-- [ ] **ID1:** Estruturou o **PRD** e o **SDD** (Diagrama Mermaid) de forma clara, utilizando IA para modelar o sistema de recomendação baseado em humor.
-- [ ] **ID2:** A aplicação foi estruturada em formato de **Monorepo** (Frontend + Backend) no GitHub.
-- [ ] **ID3:** Mapeou o PRD em **Histórias de Usuário** no GitHub Projects, criando backlog com funcionalidades como recomendação, avaliação e favoritos.
-- [ ] **ID4:** Demonstrou domínio do **GitFlow**, utilizando branches (`feature/*`, `develop`, `main`) e Pull Requests.
+- [x] **ID1:** Estruturou o **PRD** e o **SDD** (Diagrama Mermaid) de forma clara, utilizando IA para modelar o sistema de recomendação baseado em humor.
+- [x] **ID2:** A aplicação foi estruturada em formato de **Monorepo** (Frontend + Backend) no GitHub.
+- [x] **ID3:** Mapeou o PRD em **Histórias de Usuário** no GitHub Projects, criando backlog com funcionalidades como recomendação, avaliação e favoritos.
+- [x] **ID4:** Demonstrou domínio do **GitFlow**, utilizando branches (`feature/*`, `develop`, `main`) e Pull Requests.
 
 ---
 
