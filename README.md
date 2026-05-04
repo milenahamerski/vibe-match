@@ -4,6 +4,7 @@ VibeMatch é uma aplicação web que recomenda filmes, séries e livros com base
 A plataforma conecta emoções a conteúdos ideais para cada momento, proporcionando uma experiência personalizada.  
 Usuários podem avaliar, favoritar e organizar conteúdos de forma simples e intuitiva.
 
+Link dos protótipos de tela: [Stitch](https://stitch.withgoogle.com/projects/8469696878686727853)
 ---
 
 ## 🚀 Stack Tecnológica
