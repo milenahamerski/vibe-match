@@ -74,8 +74,8 @@ USER ||--o{ FAVORITE : has
 USER ||--o{ LIST : creates
 
 CONTENT ||--o{ REVIEW : receives
-CONTENT ||--o{ FAVORITE : is
-CONTENT ||--o{ LIST_ITEM : belongs
+CONTENT ||--o{ FAVORITE : is_favorited
+CONTENT ||--o{ LIST_ITEM : appears_in
 
 LIST ||--o{ LIST_ITEM : contains
 
@@ -104,7 +104,6 @@ REVIEW {
 }
 
 FAVORITE {
-  string id PK
   string userId FK
   string contentId FK
 }
@@ -113,11 +112,13 @@ LIST {
   string id PK
   string userId FK
   string name
+  datetime createdAt
 }
 
 LIST_ITEM {
   string id PK
   string listId FK
   string contentId FK
+  int position
 }
 ```

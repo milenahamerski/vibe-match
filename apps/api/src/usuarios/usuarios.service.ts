@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsuariosService {
@@ -16,13 +17,25 @@ export class UsuariosService {
       throw new ConflictException('Um usuário com este e-mail já existe.');
     }
 
-    return this.prisma.user.create({
-      data: createUsuarioDto,
+    const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        ...createUsuarioDto,
+        password: hashedPassword,
+      },
     });
+
+    delete (user as any).password;
+    return user;
   }
 
   async findAll() {
-    return this.prisma.user.findMany();
+    const users = await this.prisma.user.findMany();
+    return users.map((user) => {
+      delete (user as any).password;
+      return user;
+    });
   }
 
   async findOne(id: string) {
@@ -34,7 +47,14 @@ export class UsuariosService {
       throw new NotFoundException('Usuário não encontrado.');
     }
 
+    delete (user as any).password;
     return user;
+  }
+
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 
   async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
@@ -50,17 +70,28 @@ export class UsuariosService {
       }
     }
 
-    return this.prisma.user.update({
+    const updateData = { ...updateUsuarioDto };
+    if (updateUsuarioDto.password) {
+      updateData.password = await bcrypt.hash(updateUsuarioDto.password, 10);
+    }
+
+    const user = await this.prisma.user.update({
       where: { id },
-      data: updateUsuarioDto,
+      data: updateData,
     });
+
+    delete (user as any).password;
+    return user;
   }
 
   async remove(id: string) {
     await this.findOne(id);
 
-    return this.prisma.user.delete({
+    const user = await this.prisma.user.delete({
       where: { id },
     });
+
+    delete (user as any).password;
+    return user;
   }
 }
