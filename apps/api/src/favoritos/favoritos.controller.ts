@@ -9,12 +9,18 @@ import {
 } from '@nestjs/common';
 import { LimiteFavoritosExcedidoException } from './exceptions/limite-favoritos-excedido.exception';
 import { OfertaPremiumFilter } from './filters/oferta-premium.filter';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+@ApiTags('favoritos')
 @Controller('favoritos')
 @UseFilters(OfertaPremiumFilter) // Filtro aplicado a nível de classe
 export class FavoritosController {
   
   @Get('usuario/:id')
+  @ApiOperation({ summary: 'Obtém a lista de itens favoritados de um usuário específico' })
+  @ApiParam({ name: 'id', description: 'ID do usuário', example: '1' })
+  @ApiResponse({ status: 200, description: 'Favoritos obtidos com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
   obterFavoritosPorUsuario(@Param('id') id: string) {
     if (id !== '1') {
       throw new NotFoundException(
@@ -34,6 +40,8 @@ export class FavoritosController {
   }
 
   @Get('admin')
+  @ApiOperation({ summary: 'Obtém o painel administrativo de favoritos globais (lança exceção de teste)' })
+  @ApiResponse({ status: 401, description: 'Acesso negado: Você não possui privilégios de Administrador.' })
   obterAdminDashboard() {
     throw new UnauthorizedException(
       'Acesso negado: Você não possui privilégios de Administrador para gerenciar os favoritos globais.',
@@ -41,6 +49,10 @@ export class FavoritosController {
   }
 
   @Get('adicionar/:total')
+  @ApiOperation({ summary: 'Adiciona múltiplos itens favoritos de uma só vez (com validação de limite)' })
+  @ApiParam({ name: 'total', description: 'Número total de favoritos a adicionar', example: 2 })
+  @ApiResponse({ status: 200, description: 'Itens favoritados com sucesso.' })
+  @ApiResponse({ status: 400, description: 'Limite de favoritos excedido (máximo 3). Se total >= 5, redireciona pelo filtro Premium.' })
   adicionarMultiplosFavoritos(@Param('total', ParseIntPipe) total: number) {
     const LIMITE_MAXIMO = 3;
 
