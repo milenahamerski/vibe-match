@@ -7,6 +7,7 @@ import { AvaliacoesModule } from './avaliacoes/avaliacoes.module';
 import { FavoritosModule } from './favoritos/favoritos.module';
 import { ListasModule } from './listas/listas.module';
 import { ItensListaModule } from './itens-lista/itens-lista.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ItensListaModule } from './itens-lista/itens-lista.module';
     FavoritosModule,
     ListasModule,
     ItensListaModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
