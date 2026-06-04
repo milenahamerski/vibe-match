@@ -8,9 +8,13 @@ import {
   Param,
   Body,
   HttpCode,
+  Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ConteudosService } from './conteudos.service';
 import type { Conteudo } from './interfaces/conteudo.interface';
+import { CreateConteudoDto } from './dto/create-conteudo.dto';
+import { QueryFilterDto } from './dto/query-filter.dto';
 
 @Controller('conteudos')
 export class ConteudosController {
@@ -18,33 +22,33 @@ export class ConteudosController {
 
   @Post()
   @HttpCode(201)
-  create(@Body() body: Conteudo) {
+  create(@Body() body: CreateConteudoDto) {
     return this.conteudosService.create(body);
   }
 
   @Get()
-  findAll() {
-    return this.conteudosService.findAll();
+  findAll(@Query() queryFilter: QueryFilterDto) {
+    return this.conteudosService.findAll(queryFilter.filter, queryFilter.page);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.conteudosService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() body: Partial<Conteudo>) {
-    return this.conteudosService.update(id, body);
+  update(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<CreateConteudoDto>) {
+    return this.conteudosService.update(id, body as Partial<Conteudo>);
   }
 
   @Patch(':id')
-  partialUpdate(@Param('id') id: string, @Body() body: Partial<Conteudo>) {
-    return this.conteudosService.update(id, body);
+  partialUpdate(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<CreateConteudoDto>) {
+    return this.conteudosService.update(id, body as Partial<Conteudo>);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     this.conteudosService.remove(id);
   }
 }
