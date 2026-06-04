@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  age       Int?
+  roles     Role[]     @default([USER])
+  createdAt DateTime   @default(now())
+  reviews   Review[]
+  favorites Favorite[]
+  lists     List[]
+}
+
+model Content {
+  id        String     @id @default(uuid())
+  title     String
+  type      String
+  genre     String
+  reviews   Review[]
+  favorites Favorite[]
+  listItems ListItem[]
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  contentId String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+}
+
+model Favorite {
+  id        String @id @default(uuid())
+  userId    String
+  contentId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentId])
+}
+
+model List {
+  id        String @id @default(uuid())
+  userId    String
+  name      String
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listItems ListItem[]
+}
+
+model ListItem {
+  id        String @id @default(uuid())
+  listId    String
+  contentId String
+
+  list    List    @relation(fields: [listId], references: [id], onDelete: Cascade)
+  content Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, contentId])
+}
