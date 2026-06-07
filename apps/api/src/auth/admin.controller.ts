@@ -2,12 +2,19 @@ import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RolesGuard } from './roles.guard';
 import { Roles } from './roles.decorator';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('admin')
+@ApiBearerAuth()
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AdminController {
   @Get()
   @Roles('ADMIN')
+  @ApiOperation({ summary: 'Acessa dados da área administrativa' })
+  @ApiResponse({ status: 200, description: 'Dados retornados com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Não autorizado (Token JWT inválido ou ausente).' })
+  @ApiResponse({ status: 403, description: 'Acesso proibido (Requer perfil de ADMIN).' })
   getAdminData() {
     return { message: 'Bem-vindo, Admin!' };
   }
@@ -15,6 +22,10 @@ export class AdminController {
   // Rota para o desafio extra (apenas USER, mas acessível pelo ADMIN por conta do bypass)
   @Get('somente-usuario')
   @Roles('USER')
+  @ApiOperation({ summary: 'Rota restrita a usuários (acessível por ADMIN via bypass)' })
+  @ApiResponse({ status: 200, description: 'Dados retornados com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Não autorizado (Token JWT inválido ou ausente).' })
+  @ApiResponse({ status: 403, description: 'Acesso proibido (Requer perfil de USER ou ADMIN).' })
   getSomenteUsuarioData(@Req() req) {
     return {
       message: 'Você tem acesso como USER (ou ADMIN via bypass)!',
