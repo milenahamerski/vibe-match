@@ -94,4 +94,24 @@ export class UsuariosService {
     delete (user as any).password;
     return user;
   }
+
+  async obterHistorico(userId: string) {
+    await this.findOne(userId);
+
+    const reviews = await this.prisma.review.findMany({
+      where: { userId },
+      include: { content: true },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const favorites = await this.prisma.favorite.findMany({
+      where: { userId },
+      include: { content: true },
+    });
+
+    return {
+      reviews,
+      favorites,
+    };
+  }
 }

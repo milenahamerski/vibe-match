@@ -76,4 +76,13 @@ export class UsuariosController {
   async remove(@Param('id') id: string) {
     await this.usuariosService.remove(id);
   }
+
+  @Get(':id/historico')
+  @ApiOperation({ summary: 'Obtém o histórico de interações do usuário (avaliações e favoritos)' })
+  @ApiParam({ name: 'id', description: 'ID UUID do usuário', example: 'ca08dd5e-a2f0-448b-8270-30a824ec6875' })
+  @ApiResponse({ status: 200, description: 'Histórico retornado com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+  obterHistorico(@Param('id') id: string) {
+    return this.usuariosService.obterHistorico(id);
+  }
 }
