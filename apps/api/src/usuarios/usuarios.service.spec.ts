@@ -99,7 +99,7 @@ describe('UsuariosService', () => {
     it('should return a user by email', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({ id: '1', email: 'test@test.com', password: 'pwd' });
       const result = await service.findByEmail('test@test.com');
-      expect(result.email).toBe('test@test.com');
+      expect(result!.email).toBe('test@test.com');
     });
   });
 

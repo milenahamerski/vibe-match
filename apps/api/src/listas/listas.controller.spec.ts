@@ -35,7 +35,7 @@ describe('ListasController', () => {
 
   describe('criar', () => {
     it('should create a lista', async () => {
-      const dto = { userId: '1', title: 'My List', description: 'Test' };
+      const dto = { userId: '1', name: 'My List', description: 'Test' };
       mockListasService.criar.mockResolvedValue({ id: '1', ...dto });
 
       const result = await controller.criar(dto);

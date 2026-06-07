@@ -38,7 +38,7 @@ describe('ConteudosController', () => {
 
   describe('create', () => {
     it('should create a content', async () => {
-      const createDto = { title: 'Test', type: 'Movie', genre: 'Ação' };
+      const createDto = { title: 'Test', type: 'Movie', genre: 'Ação' } as any;
       mockConteudosService.create.mockResolvedValue({ id: '1', ...createDto });
 
       const result = await controller.create(createDto);
@@ -93,7 +93,7 @@ describe('ConteudosController', () => {
 
   describe('update', () => {
     it('should update a content', async () => {
-      const updateDto = { title: 'Updated', type: 'Movie', genre: 'Ação' };
+      const updateDto = { title: 'Updated', type: 'Movie', genre: 'Ação' } as any;
       const updatedContent = { id: '1', ...updateDto };
       mockConteudosService.update.mockResolvedValue(updatedContent);
 
