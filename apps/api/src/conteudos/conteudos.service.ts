@@ -96,11 +96,18 @@ export class ConteudosService {
       return this.prisma.content.findMany({ take: 5 });
     }
 
+    // Filtra reviews que possam ter content null (caso de inconsistência no banco)
+    const validReviews = positiveReviews.filter((r) => r.content != null);
+
+    if (validReviews.length === 0) {
+      return this.prisma.content.findMany({ take: 5 });
+    }
+
     const preferredGenres = Array.from(
-      new Set(positiveReviews.map((r) => r.content.genre)),
+      new Set(validReviews.map((r) => r.content.genre)),
     );
 
-    const evaluatedContentIds = positiveReviews.map((r) => r.contentId);
+    const evaluatedContentIds = validReviews.map((r) => r.contentId);
 
     // Recomendar conteúdos do mesmo gênero que o usuário ainda não avaliou
     return this.prisma.content.findMany({
