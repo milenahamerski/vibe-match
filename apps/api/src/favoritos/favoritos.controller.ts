@@ -1,23 +1,62 @@
 import {
   Controller,
   Get,
+  Post,
+  Delete,
+  Body,
   Param,
   NotFoundException,
   UnauthorizedException,
   UseFilters,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
+import { FavoritosService } from './favoritos.service';
+import { CriarFavoritoDto } from './dto/criar-favorito.dto';
 import { LimiteFavoritosExcedidoException } from './exceptions/limite-favoritos-excedido.exception';
 import { OfertaPremiumFilter } from './filters/oferta-premium.filter';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @ApiTags('favoritos')
 @Controller('favoritos')
 @UseFilters(OfertaPremiumFilter) // Filtro aplicado a nível de classe
 export class FavoritosController {
-  
+  constructor(private readonly favoritosService: FavoritosService) {}
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Adiciona um conteúdo aos favoritos' })
+  @ApiResponse({ status: 201, description: 'Favorito adicionado com sucesso.' })
+  async favoritar(@Body() dto: CriarFavoritoDto) {
+    return this.favoritosService.favoritar(dto.userId, dto.contentId);
+  }
+
+  @Delete('usuario/:userId/conteudo/:contentId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove um conteúdo dos favoritos' })
+  @ApiResponse({ status: 200, description: 'Favorito removido com sucesso.' })
+  async desfavoritar(
+    @Param('userId') userId: string,
+    @Param('contentId') contentId: string,
+  ) {
+    return this.favoritosService.desfavoritar(userId, contentId);
+  }
+
+  @Get('real/usuario/:userId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtém a lista real de favoritos do banco de dados' })
+  async buscarFavoritosReal(@Param('userId') userId: string) {
+    return this.favoritosService.buscarPorUsuario(userId);
+  }
+
+  // --- Endpoints de Demonstração / Legado ---
+
   @Get('usuario/:id')
-  @ApiOperation({ summary: 'Obtém a lista de itens favoritados de um usuário específico' })
+  @ApiOperation({ summary: 'Obtém a lista de itens favoritados de um usuário específico (Mock)' })
   @ApiParam({ name: 'id', description: 'ID do usuário', example: '1' })
   @ApiResponse({ status: 200, description: 'Favoritos obtidos com sucesso.' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
