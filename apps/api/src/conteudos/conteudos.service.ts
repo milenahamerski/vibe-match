@@ -63,9 +63,15 @@ export class ConteudosService {
     let genres: string[] = [];
     const lowerMood = mood.toLowerCase();
     if (lowerMood === 'feliz' || lowerMood === 'animado') {
-      genres = ['Comédia', 'Sci-Fi', 'Ação', 'Comedy'];
+      genres = ['Comédia', 'Ação', 'Comedy'];
     } else if (lowerMood === 'triste' || lowerMood === 'melancolico') {
-      genres = ['Drama', 'Romance'];
+      genres = ['Drama'];
+    } else if (lowerMood === 'romantico') {
+      genres = ['Romance'];
+    } else if (lowerMood === 'relaxado') {
+      genres = ['Comédia', 'Documentário'];
+    } else if (lowerMood === 'ansioso' || lowerMood === 'tenso') {
+      genres = ['Suspense', 'Terror', 'Sci-Fi'];
     } else {
       genres = ['Suspense', 'Terror', 'Documentário', 'Sci-Fi'];
     }

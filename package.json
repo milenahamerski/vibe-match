@@ -15,7 +15,7 @@
     "prisma:studio": "npm run prisma:studio -w api",
     "prisma:migrate": "npm run prisma:migrate -w api",
     "prisma:generate": "npm run prisma:generate -w api",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test -w api"
   },
   "repository": {
     "type": "git",

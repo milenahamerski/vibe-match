@@ -1,0 +1,17 @@
+/* App.css */
+.page-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 3rem;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
