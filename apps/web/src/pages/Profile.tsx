@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import './Dashboard.css';
 import './Profile.css';
-import { Heart, Star, Film, Tv, Book, Search } from 'lucide-react';
-import { getMockedImage } from '../utils/images';
 
 interface Content {
   id: string;
@@ -26,7 +24,7 @@ interface ReviewItem {
 }
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,25 +35,61 @@ const Profile = () => {
   const [editName, setEditName] = useState(user?.name || '');
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      // Usar a rota real que busca do banco usando o Prisma
-      const favRes = await api.get(`/favoritos/real/usuario/${user?.id}`);
-      setFavorites(favRes.data?.data || favRes.data);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string>('/avatar.png');
 
-      const revRes = await api.get(`/avaliacoes/usuario/${user?.id}`);
-      setReviews(revRes.data?.data || revRes.data);
-    } catch (err) {
-      console.error('Erro ao buscar dados do perfil', err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (user) {
+      const stored = localStorage.getItem(`vibe_user_avatar_${user.id}`);
+      if (stored) {
+        setTimeout(() => {
+          setAvatarUrl(stored);
+        }, 0);
+      }
+    }
+  }, [user]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && user) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        localStorage.setItem(`vibe_user_avatar_${user.id}`, base64String);
+        setAvatarUrl(base64String);
+        setActionMessage('Profile photo updated!');
+        setTimeout(() => setActionMessage(''), 3000);
+        window.dispatchEvent(new Event('storage'));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const favRes = await api.get(`/favoritos/real/usuario/${user.id}`);
+        setFavorites(favRes.data?.data || favRes.data);
+
+        const revRes = await api.get(`/avaliacoes/usuario/${user.id}`);
+        setReviews(revRes.data?.data || revRes.data);
+      } catch (err) {
+        console.error('Error fetching profile data', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user) {
-      setEditName(user.name);
+      setTimeout(() => {
+        setEditName(user.name);
+      }, 0);
       fetchData();
     }
   }, [user]);
@@ -65,10 +99,10 @@ const Profile = () => {
     try {
       await api.delete(`/favoritos/usuario/${user.id}/conteudo/${contentId}`);
       setFavorites(prev => prev.filter(f => f.content.id !== contentId));
-      setActionMessage('Removido dos favoritos!');
+      setActionMessage('Removed from favorites!');
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
-      setActionMessage('Erro ao remover favorito.');
+      setActionMessage('Error removing favorite.');
       setTimeout(() => setActionMessage(''), 3000);
     }
   };
@@ -78,11 +112,11 @@ const Profile = () => {
     setSavingProfile(true);
     try {
       await api.patch(`/usuarios/${user.id}`, { name: editName });
-      user.name = editName; // Atualiza contexto local temporariamente (ideal era o AuthContext fazer reload)
-      setActionMessage('Perfil atualizado com sucesso!');
+      updateUser({ ...user, name: editName });
+      setActionMessage('Profile updated successfully!');
       setShowEditModal(false);
     } catch (err) {
-      setActionMessage('Erro ao atualizar perfil.');
+      setActionMessage('Error updating profile.');
     } finally {
       setSavingProfile(false);
       setTimeout(() => setActionMessage(''), 3000);
@@ -91,122 +125,125 @@ const Profile = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'FILM': return <Film size={18} />;
-      case 'SERIES': return <Tv size={18} />;
-      case 'BOOK': return <Book size={18} />;
-      default: return null;
+      case 'FILM': return 'movie';
+      case 'SERIES': return 'tv';
+      case 'BOOK': return 'menu_book';
+      default: return 'movie';
     }
   };
 
   if (!user) return null;
 
   return (
-    <div className="dashboard profile-container">
+    <div className="profile-container">
       {actionMessage && <div className="toast-message">{actionMessage}</div>}
 
-      <div className="glass-panel profile-header">
+      <div className="profile-header">
         <button 
           onClick={() => setShowEditModal(true)}
-          className="profile-edit-btn btn-secondary"
+          className="btn-secondary"
+          style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10, fontSize: '0.875rem', padding: '0.5rem 1rem' }}
         >
-          Editar Perfil
+          Edit Profile
         </button>
-        <div className="profile-avatar">
-          {user.name.charAt(0).toUpperCase()}
+        <div className="profile-avatar clickable" onClick={handleAvatarClick} title="Click to change photo">
+          <img src={avatarUrl} alt="Avatar" className="profile-avatar-img" />
+          <div className="profile-avatar-overlay">
+            <span className="material-symbols-outlined" style={{ fontSize: '24px', color: '#fff' }}>photo_camera</span>
+          </div>
         </div>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleAvatarChange} 
+          accept="image/*" 
+          style={{ display: 'none' }} 
+        />
         <h2 className="profile-name">{user.name}</h2>
         <p className="profile-email">{user.email}</p>
         <div className="profile-stats">
           <div className="stat-item">
             <span className="stat-value">{favorites.length}</span>
-            <span className="stat-label">Favoritos</span>
+            <span className="stat-label">Favorites</span>
           </div>
           <div className="stat-item">
             <span className="stat-value">{reviews.length}</span>
-            <span className="stat-label">Avaliações</span>
+            <span className="stat-label">Reviews</span>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="loading-state">Carregando o seu perfil...</div>
+        <div className="loading-state">
+          <div className="spinner"></div>
+          Loading your profile...
+        </div>
       ) : (
         <div className="profile-grid">
-          {/* Seção Favoritos */}
-          <div className="glass-panel">
+          {/* Favorites Section */}
+          <div className="glass-panel" style={{ padding: '1.5rem', border: 'none' }}>
             <h3 className="section-title">
-              <Heart className="text-pink-500" style={{color: '#ec4899'}} /> Meus Favoritos
+              <span className="material-symbols-outlined" style={{ color: 'var(--tertiary)' }}>favorite</span>
+              My Favorites
             </h3>
             {favorites.length === 0 ? (
-              <div className="empty-state">
-                <Search size={48} className="mb-4 text-muted mx-auto opacity-50" style={{color: 'var(--text-secondary)'}} />
-                <p className="empty-list-text" style={{color: 'var(--text-secondary)'}}>Você ainda não possui favoritos.</p>
+              <div className="empty-state" style={{ padding: '2rem 1rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>favorite_border</span>
+                <p className="empty-list-text" style={{ border: 'none', background: 'transparent' }}>You don't have any favorites yet.</p>
               </div>
             ) : (
-              <div className="content-grid" style={{marginTop: '1.5rem'}}>
+              <div className="list-container mt-4">
                 {favorites.map((fav) => (
-                  <div key={fav.id} className="content-card">
-                    <div className="card-image-wrapper">
-                      <img src={getMockedImage(fav.content.title, fav.content.genre)} alt={fav.content.title} className="card-image" />
-                      <div className="card-overlay"></div>
-                      <div className="card-type-badge">
-                        {getTypeIcon(fav.content.type)}
+                  <div key={fav.id} className="list-item">
+                    <div className="item-info-wrapper">
+                      <div className="item-icon">
+                        <span className="material-symbols-outlined">{getTypeIcon(fav.content.type)}</span>
+                      </div>
+                      <div>
+                        <h4 className="item-title">{fav.content.title}</h4>
+                        <p className="item-genre">{fav.content.genre}</p>
                       </div>
                     </div>
-                    
-                    <div className="card-content">
-                      <h4 className="card-title">{fav.content.title}</h4>
-                      <p className="card-genre">{fav.content.genre}</p>
-                      
-                      <div className="card-actions" style={{justifyContent: 'center'}}>
-                        <button 
-                          onClick={() => handleUnfavorite(fav.content.id)}
-                          className="action-btn favorited"
-                          title="Remover dos favoritos"
-                        >
-                          <Heart size={18} className="fill-current" />
-                          <span>Saved</span>
-                        </button>
-                      </div>
-                    </div>
+                    <button 
+                      onClick={() => handleUnfavorite(fav.content.id)}
+                      className="btn-remove-fav"
+                      title="Remove from favorites"
+                    >
+                      <span className="material-symbols-outlined fill-icon">heart_broken</span>
+                    </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Seção Avaliações */}
-          <div className="glass-panel">
+          {/* Reviews Section */}
+          <div className="glass-panel" style={{ padding: '1.5rem', border: 'none' }}>
             <h3 className="section-title">
-              <Star style={{color: '#eab308'}} /> Minhas Avaliações
+              <span className="material-symbols-outlined" style={{ color: '#eab308' }}>star</span>
+              My Reviews
             </h3>
             {reviews.length === 0 ? (
-              <div className="empty-state">
-                <Search size={48} className="mb-4 text-muted mx-auto opacity-50" style={{color: 'var(--text-secondary)'}} />
-                <p className="empty-list-text" style={{color: 'var(--text-secondary)'}}>Você ainda não avaliou nenhum conteúdo.</p>
+              <div className="empty-state" style={{ padding: '2rem 1rem' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>star_rate</span>
+                <p className="empty-list-text" style={{ border: 'none', background: 'transparent' }}>You haven't reviewed any content yet.</p>
               </div>
             ) : (
-              <div className="content-grid" style={{marginTop: '1.5rem'}}>
+              <div className="list-container mt-4">
                 {reviews.map((rev) => (
-                  <div key={rev.id} className="content-card">
-                    <div className="card-image-wrapper">
-                      <img src={getMockedImage(rev.content.title, rev.content.genre)} alt={rev.content.title} className="card-image" />
-                      <div className="card-overlay"></div>
-                      <div className="card-type-badge">
-                        {getTypeIcon(rev.content.type)}
+                  <div key={rev.id} className="review-item">
+                    <div className="review-header">
+                      <div className="item-info-wrapper">
+                        <h4 className="item-title" style={{ margin: 0 }}>{rev.content.title}</h4>
                       </div>
-                    </div>
-                    
-                    <div className="card-content">
-                      <h4 className="card-title">{rev.content.title}</h4>
-                      <div className="review-rating" style={{display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#eab308', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 600}}>
-                        <Star size={14} className="fill-current" />
+                      <div className="review-rating">
+                        <span className="material-symbols-outlined fill-icon" style={{ fontSize: '16px' }}>star</span>
                         <span>{rev.rating}/5</span>
                       </div>
-                      {rev.comment && (
-                        <p className="review-comment" style={{color: 'var(--text-secondary)', fontSize: '0.875rem', fontStyle: 'italic'}}>"{rev.comment}"</p>
-                      )}
                     </div>
+                    {rev.comment && (
+                      <p className="review-comment">"{rev.comment}"</p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -215,28 +252,27 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Modal Editar Perfil */}
+      {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-content glass-panel" onClick={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Editar Perfil</h3>
+              <h3>Edit Profile</h3>
             </div>
-            <div className="modal-body" style={{marginBottom: '1rem'}}>
-              <label style={{display: 'block', fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem'}}>Nome</label>
+            <div className="modal-body mb-4">
+              <label style={{ display: 'block', fontSize: '0.875rem', color: 'var(--on-surface-variant)', marginBottom: '0.5rem', fontWeight: 600 }}>Name</label>
               <input 
                 type="text" 
                 value={editName}
                 onChange={e => setEditName(e.target.value)}
                 className="input-field"
-                style={{width: '100%'}}
-                placeholder="Seu nome"
+                placeholder="Your name"
               />
             </div>
-            <div className="modal-footer" style={{display: 'flex', gap: '0.5rem'}}>
-              <button className="btn-secondary" style={{flex: 1}} onClick={() => setShowEditModal(false)}>Cancelar</button>
-              <button className="btn-primary" style={{flex: 1}} onClick={handleSaveProfile} disabled={savingProfile || !editName.trim()}>
-                {savingProfile ? 'Salvando...' : 'Salvar Alterações'}
+            <div className="modal-footer flex gap-2">
+              <button className="btn-secondary flex-1" onClick={() => setShowEditModal(false)}>Cancel</button>
+              <button className="btn-primary flex-1" onClick={handleSaveProfile} disabled={savingProfile || !editName.trim()}>
+                {savingProfile ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>

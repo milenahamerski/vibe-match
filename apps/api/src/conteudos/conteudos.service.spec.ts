@@ -57,7 +57,7 @@ describe('ConteudosService', () => {
       expect(mockPrismaService.content.findMany).toHaveBeenCalledWith({
         where: {},
         skip: 0,
-        take: 10,
+        take: 100,
       });
     });
 
@@ -73,8 +73,8 @@ describe('ConteudosService', () => {
             { type: { contains: 'Test', mode: 'insensitive' } },
           ]
         },
-        skip: 10,
-        take: 10,
+        skip: 100,
+        take: 100,
       });
     });
   });
@@ -123,27 +123,27 @@ describe('ConteudosService', () => {
   });
 
   describe('recomendarPorHumor', () => {
-    it('should return feliz/animado genres', async () => {
+    it('should return energetic genres', async () => {
       mockPrismaService.content.findMany.mockResolvedValue([{ id: '1' }]);
-      await service.recomendarPorHumor('Feliz');
+      await service.recomendarPorHumor('energetic');
       expect(mockPrismaService.content.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: { genre: { in: ['Comédia', 'Sci-Fi', 'Ação', 'Comedy'], mode: 'insensitive' } }
+        where: { genre: { in: ['Action', 'Comedy'], mode: 'insensitive' } }
       }));
     });
 
-    it('should return triste/melancolico genres', async () => {
+    it('should return chill genres', async () => {
       mockPrismaService.content.findMany.mockResolvedValue([{ id: '1' }]);
-      await service.recomendarPorHumor('Triste');
+      await service.recomendarPorHumor('chill');
       expect(mockPrismaService.content.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: { genre: { in: ['Drama', 'Romance'], mode: 'insensitive' } }
+        where: { genre: { in: ['Comedy', 'Documentary', 'Romance'], mode: 'insensitive' } }
       }));
     });
 
     it('should return default genres for other moods', async () => {
       mockPrismaService.content.findMany.mockResolvedValue([{ id: '1' }]);
-      await service.recomendarPorHumor('Outro');
+      await service.recomendarPorHumor('Other');
       expect(mockPrismaService.content.findMany).toHaveBeenCalledWith(expect.objectContaining({
-        where: { genre: { in: ['Suspense', 'Terror', 'Documentário', 'Sci-Fi'], mode: 'insensitive' } }
+        where: { genre: { in: ['Action', 'Comedy', 'Drama', 'Romance', 'Sci-Fi', 'Horror', 'Thriller', 'Documentary'], mode: 'insensitive' } }
       }));
     });
   });
