@@ -17,9 +17,9 @@ Link dos protótipos de tela: [Stitch](https://stitch.withgoogle.com/projects/84
 
 ### Frontend
 
-- Vue 3
+- React 19
 - Vite
-- Tailwind CSS
+- Vanilla CSS
 
 ### Infraestrutura
 
@@ -49,6 +49,6 @@ Este projeto tem como objetivo aplicar conceitos de arquitetura de software, eng
 ```bash
 apps/
   api/   # Backend (NestJS)
-  web/   # Frontend (Vue)
+  web/   # Frontend (React)
 docs/    # Documentação (PRD, SDD, Checklist)
 ```
