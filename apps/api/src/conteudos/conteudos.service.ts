@@ -16,7 +16,7 @@ export class ConteudosService {
   }
 
   async findAll(filter?: string, page: number = 1) {
-    const pageSize = 10;
+    const pageSize = 100;
     const whereClause: any = {};
 
     if (filter) {
@@ -59,28 +59,27 @@ export class ConteudosService {
 
   // US02 & US03 - Recomendação de Humor
   async recomendarPorHumor(mood: string) {
-    // Mapeamento simples de humor para gênero
     let genres: string[] = [];
     const lowerMood = mood.toLowerCase();
-    if (lowerMood === 'feliz' || lowerMood === 'animado') {
-      genres = ['Comédia', 'Ação', 'Comedy'];
-    } else if (lowerMood === 'triste' || lowerMood === 'melancolico') {
-      genres = ['Drama'];
-    } else if (lowerMood === 'romantico') {
-      genres = ['Romance'];
-    } else if (lowerMood === 'relaxado') {
-      genres = ['Comédia', 'Documentário'];
-    } else if (lowerMood === 'ansioso' || lowerMood === 'tenso') {
-      genres = ['Suspense', 'Terror', 'Sci-Fi'];
+    if (lowerMood === 'energetic') {
+      genres = ['Action', 'Comedy'];
+    } else if (lowerMood === 'chill') {
+      genres = ['Comedy', 'Documentary', 'Romance'];
+    } else if (lowerMood === 'creative') {
+      genres = ['Sci-Fi', 'Documentary', 'Thriller'];
+    } else if (lowerMood === 'happy') {
+      genres = ['Comedy', 'Romance', 'Action'];
+    } else if (lowerMood === 'sleepy') {
+      genres = ['Drama', 'Documentary'];
     } else {
-      genres = ['Suspense', 'Terror', 'Documentário', 'Sci-Fi'];
+      genres = ['Action', 'Comedy', 'Drama', 'Romance', 'Sci-Fi', 'Horror', 'Thriller', 'Documentary'];
     }
 
     return this.prisma.content.findMany({
       where: {
         genre: { in: genres, mode: 'insensitive' },
       },
-      take: 5,
+      take: 50,
     });
   }
 

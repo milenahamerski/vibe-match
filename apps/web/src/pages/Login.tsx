@@ -32,7 +32,7 @@ const Login = () => {
       }
     } catch (err: any) {
       const msg = err.response?.data?.message;
-      setError(Array.isArray(msg) ? msg[0] : msg || 'Erro ao realizar login. Verifique suas credenciais.');
+      setError(Array.isArray(msg) ? msg[0] : msg || 'Failed to sign in. Check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -42,28 +42,28 @@ const Login = () => {
     <div className="auth-container">
       <div className="glass-panel auth-card">
         <div className="auth-header">
-          <h2>Bem-vindo de volta</h2>
-          <p>Faça login para acessar o VibeMatch</p>
+          <h2 className="auth-title">Welcome back</h2>
+          <p className="auth-subtitle">Sign in to your account to continue</p>
         </div>
 
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label htmlFor="email">E-mail</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
               className="input-field"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder="you@example.com"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Senha</label>
+            <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
@@ -75,13 +75,13 @@ const Login = () => {
             />
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
+          <button type="submit" className="btn-primary w-full mt-2" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <div className="auth-footer">
-          Não tem uma conta? <Link to="/register">Cadastre-se</Link>
+          Don't have an account? <Link to="/register" className="text-primary">Sign up</Link>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
+import './Explore.css';
 import { getMockedImage } from '../utils/images';
 
 interface Content {
@@ -12,62 +12,72 @@ interface Content {
   genre: string;
 }
 
-const Dashboard = () => {
+const Explore = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [recommendations, setRecommendations] = useState<Content[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
-  const [activeMood, setActiveMood] = useState<string>('');
 
-  // User History State
+  // Favorites & Reviews state
   const [userFavs, setUserFavs] = useState<string[]>([]);
   const [userReviews, setUserReviews] = useState<string[]>([]);
 
-  // Modais state
-  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
+  // Modals state
   const [showSynopsis, setShowSynopsis] = useState(false);
   const [showRating, setShowRating] = useState(false);
-  const [ratingValue, setRatingValue] = useState<number>(0);
+  const [selectedContent, setSelectedContent] = useState<Content | null>(null);
+  const [ratingValue, setRatingValue] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
 
-  const fetchRecommendations = async (mood: string) => {
-    setActiveMood(mood);
-    setLoading(true);
-    setError('');
-    try {
-      const response = await api.get(`/conteudos/recomendacoes/humor/${mood}`);
-      setRecommendations(response.data?.data || response.data);
-      
-      // Fetch user history to paint hearts red
-      if (user) {
-        const [favRes, revRes] = await Promise.all([
-          api.get(`/favoritos/real/usuario/${user.id}`),
-          api.get(`/avaliacoes/usuario/${user.id}`)
-        ]);
+  // Fetch initial user data (favorites/reviews)
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user) return;
+      try {
+        const favsResponse = await api.get(`/favoritos/real/usuario/${user.id}`);
+        setUserFavs((favsResponse.data?.data || favsResponse.data || []).map((f: any) => f.content.id));
         
-        const favs = (favRes.data?.data || favRes.data || []).map((f: any) => f.contentId);
-        const revs = (revRes.data?.data || revRes.data || []).map((r: any) => r.contentId);
-        
-        setUserFavs(favs);
-        setUserReviews(revs);
+        const revsResponse = await api.get(`/avaliacoes/usuario/${user.id}`);
+        setUserReviews((revsResponse.data?.data || revsResponse.data || []).map((r: any) => r.contentId));
+      } catch (err) {
+        console.error("Error fetching user data", err);
       }
-      setRecommendations(response.data?.data || response.data);
-    } catch (err) {
-      console.error(err);
-      setError('Error fetching recommendations. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchUserData();
+  }, [user]);
+
+  // Fetch movie list based on search term
+  useEffect(() => {
+    const fetchContents = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await api.get(`/conteudos`, {
+          params: { filter: searchTerm }
+        });
+        setContents(response.data?.data || response.data || []);
+      } catch (err) {
+        console.error(err);
+        setError('Error loading catalog. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const delayDebounce = setTimeout(() => {
+      fetchContents();
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   const handleFavorite = async (contentId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Avoid opening the modal when clicking the button
+    e.stopPropagation();
     if (!user) return;
     
-    // If it's already a favorite, remove it
     if (userFavs.includes(contentId)) {
       try {
         await api.delete(`/favoritos/usuario/${user.id}/conteudo/${contentId}`);
@@ -78,7 +88,6 @@ const Dashboard = () => {
         setActionMessage('Error removing favorite.');
       }
     } else {
-      // If it's not, add to favorites
       try {
         await api.post('/favoritos', { userId: user.id, contentId });
         setUserFavs(prev => [...prev, contentId]);
@@ -92,11 +101,6 @@ const Dashboard = () => {
       }
     }
     setTimeout(() => setActionMessage(''), 3000);
-  };
-
-  const openSynopsis = (content: Content) => {
-    setSelectedContent(content);
-    setShowSynopsis(true);
   };
 
   const openRating = (content: Content, e: React.MouseEvent) => {
@@ -113,7 +117,7 @@ const Dashboard = () => {
   };
 
   const submitRating = async () => {
-    if (!user || !selectedContent || ratingValue === 0) return;
+    if (!user || !selectedContent) return;
     setSubmittingRating(true);
     try {
       await api.post('/avaliacoes', {
@@ -138,6 +142,11 @@ const Dashboard = () => {
     }
   };
 
+  const openSynopsis = (content: Content) => {
+    setSelectedContent(content);
+    setShowSynopsis(true);
+  };
+
   const getSynopsis = (content: Content) => {
     const genre = content.genre.toLowerCase();
     if (genre === 'comedy') return `Get ready for lots of laughs with "${content.title}". A hilarious comedy about everyday situations completely out of control!`;
@@ -149,55 +158,47 @@ const Dashboard = () => {
     return `Discover the fantastic work "${content.title}", a must-watch title in the ${content.genre} genre.`;
   };
 
-  const moods = [
-    { id: 'energetic', label: 'Energetic', icon: 'local_fire_department' },
-    { id: 'chill', label: 'Chill', icon: 'self_improvement' },
-    { id: 'creative', label: 'Creative', icon: 'music_note' },
-    { id: 'happy', label: 'Happy', icon: 'wb_sunny' },
-    { id: 'sleepy', label: 'Sleepy', icon: 'bedtime' }
-  ];
-
   return (
-    <div className="dashboard-container">
+    <div className="explore-container dashboard-container">
       {actionMessage && <div className="toast-message">{actionMessage}</div>}
 
-      <div className="dashboard-header">
-        <h2 className="dashboard-title">How are you feeling today?</h2>
-        
-        <div className="mood-picker">
-          {moods.map((m) => (
-            <button 
-              key={m.id}
-              className={`mood-btn ${activeMood === m.id ? 'active' : ''}`}
-              onClick={() => fetchRecommendations(m.id)}
-            >
-              <span className="material-symbols-outlined mood-icon" style={{ fontVariationSettings: activeMood === m.id ? "'FILL' 1" : "'FILL' 0" }}>
-                {m.icon}
-              </span>
-              <span>{m.label}</span>
+      <div className="explore-header">
+        <h2 className="brand-text text-3xl font-extrabold" style={{ marginBottom: '0.5rem' }}>Explore Catalog</h2>
+        <p className="text-secondary" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>Browse our entire collection of movies, series, and books</p>
+
+        {/* Search Bar */}
+        <div className="search-bar-wrapper">
+          <span className="material-symbols-outlined search-icon">search</span>
+          <input 
+            type="text" 
+            placeholder="Search by title, genre..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          {searchTerm && (
+            <button className="clear-btn" onClick={() => setSearchTerm('')}>
+              <span className="material-symbols-outlined">close</span>
             </button>
-          ))}
+          )}
         </div>
       </div>
 
-      {loading && (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Preparing the perfect vibe for you...</p>
-        </div>
-      )}
-
-      <div className="recommendations-section">
-        {error ? (
+      <div className="recommendations-section mt-6">
+        {loading ? (
+          <div className="loading-state">
+            <div className="spinner"></div>
+            <p>Searching the catalog...</p>
+          </div>
+        ) : error ? (
           <div className="empty-state">{error}</div>
-        ) : recommendations.length > 0 ? (
+        ) : contents.length > 0 ? (
           <div className="animate-fade-in">
             <div className="section-header mb-4">
-              <h3 className="section-title">Recommended for you</h3>
-              <button className="btn-see-all" onClick={() => navigate('/explore')}>See all</button>
+              <h3 className="section-title">All Titles ({contents.length})</h3>
             </div>
             <div className="content-grid">
-              {recommendations.map((content) => (
+              {contents.map((content) => (
                 <div 
                   key={content.id} 
                   className="content-card"
@@ -251,19 +252,15 @@ const Dashboard = () => {
               ))}
             </div>
           </div>
-        ) : activeMood ? (
-          <div className="empty-state">
-            <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>search</span>
-            <p className="mt-4">We couldn't find exact recommendations for this mood right now.</p>
-          </div>
         ) : (
           <div className="empty-state">
-            <p>Select a mood above to start discovering new content.</p>
+            <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5 }}>search_off</span>
+            <p className="mt-4">No titles match your search term.</p>
           </div>
         )}
       </div>
 
-      {/* Modal Sinopse */}
+      {/* Modal Synopsis */}
       {showSynopsis && selectedContent && (
         <div className="modal-overlay" onClick={() => setShowSynopsis(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -281,7 +278,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Modal Avaliação */}
+      {/* Modal Rating */}
       {showRating && selectedContent && (
         <div className="modal-overlay" onClick={() => setShowRating(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -322,4 +319,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Explore;
